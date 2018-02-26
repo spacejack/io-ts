@@ -167,6 +167,7 @@ import * as t from 'io-ts'
 | function              | `Function`                              | `Function`                              | `t.Function`                                                 |
 | literal               | `'s'`                                   | `'s'`                                   | `t.literal('s')`                                             |
 | partial               | `Partial<{ name: string }>`             | `$Shape<{ name: string }>`              | `t.partial({ name: t.string })`                              |
+| optional              | `name?: string`                         | ✘                                       | `name: t.optional(t.string)`                                 |
 | readonly              | `Readonly<T>`                           | `ReadOnly<T>`                           | `t.readonly(T)`                                              |
 | readonly array        | `ReadonlyArray<number>`                 | `ReadOnlyArray<number>`                 | `t.readonlyArray(t.number)`                                  |
 | interface             | `interface A { name: string }`          | `interface A { name: string }`          | `t.type({ name: t.string })` or `t.type({ name: t.string })` |
@@ -249,46 +250,21 @@ StrictPerson.decode({ name: 'Giulio', age: 43, surname: 'Canti' }) // fails
 
 # Mixing required and optional props
 
-Note. You can mix required and optional props using an intersection
+Note. You can mix required and optional props using the `optional` combinator
 
 ```ts
 const A = t.type({
-  foo: t.string
+  foo: t.string,
+  bar: t.optional(t.number)
 })
 
-const B = t.partial({
-  bar: t.number
-})
-
-const C = t.intersection([A, B])
-
-type CT = t.TypeOf<typeof C>
+type AT = t.TypeOf<typeof A>
 
 // same as
-type CT = {
+type AT = {
   foo: string
   bar?: number
 }
-```
-
-You can define a custom combinator to avoid the boilerplate
-
-```ts
-export function interfaceWithOptionals<RequiredProps extends t.Props, OptionalProps extends t.Props>(
-  required: RequiredProps,
-  optional: OptionalProps,
-  name?: string
-): t.IntersectionType<
-  [
-    t.InterfaceType<RequiredProps, t.TypeOfProps<RequiredProps>>,
-    t.PartialType<OptionalProps, t.TypeOfPartialProps<OptionalProps>>
-  ],
-  t.TypeOfProps<RequiredProps> & t.TypeOfPartialProps<OptionalProps>
-> {
-  return t.intersection([t.interface(required), t.partial(optional)], name)
-}
-
-const C = interfaceWithOptionals({ foo: t.string }, { bar: t.number })
 ```
 
 # Custom types
